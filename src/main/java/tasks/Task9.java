@@ -4,7 +4,6 @@ import common.Person;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -26,64 +25,61 @@ public class Task9 {
   // Костыль, эластик всегда выдает в топе "фальшивую персону".
   // Конвертируем начиная со второй
   public List<String> getNames(List<Person> persons) {
-    if (persons.size() == 0) {
+    /*if (persons.size() == 0) {
       return Collections.emptyList();
     }
-    persons.remove(0);
-    return persons.stream().map(Person::firstName).collect(Collectors.toList());
+    persons.remove(0);*/
+    //ПОЯСНЕНИЕ: вместо удаления первого элемента можно использовать skip(1),
+    // а соответственно проверять непустоту List излишне
+    return persons.stream().skip(1).map(Person::firstName).collect(Collectors.toList());
   }
 
   // Зачем-то нужны различные имена этих же персон (без учета фальшивой разумеется)
   public Set<String> getDifferentNames(List<Person> persons) {
-    return getNames(persons).stream().distinct().collect(Collectors.toSet());
+    //ПОЯСНЕНИЕ: distinct не нужно, тк Set уже гарантирует уникальность своих элементов
+    // кроме того, не сделана проверка, о которой написал автор: "без учета фальшивой разумеется",
+    // по этому,нужно добавить skip
+    return getNames(persons).stream().skip(1).collect(Collectors.toSet());
   }
 
   // Тут фронтовая логика, делаем за них работу - склеиваем ФИО
   public String convertPersonToString(Person person) {
-    String result = "";
-    if (person.secondName() != null) {
-      result += person.secondName();
-    }
-
-    if (person.firstName() != null) {
-      result += " " + person.firstName();
-    }
-
-    if (person.secondName() != null) {
-      result += " " + person.secondName();
-    }
-    return result;
+    // ПОЯСНЕНИЕ:
+    // переписал через stream, убрал лишнее объявление переменной и заменил соединение через плюсики на joining
+    // + в предыдущем соединении была ошибка:
+    // вместо middleName второй раз использовалось secondName
+    return Stream.of(person.firstName(), person.secondName(), person.middleName())
+            .filter(name -> !name.isEmpty())
+            .collect(Collectors.joining(" "));
   }
 
   // словарь id персоны -> ее имя
   public Map<Integer, String> getPersonNames(Collection<Person> persons) {
-    Map<Integer, String> map = new HashMap<>(1);
-    for (Person person : persons) {
-      if (!map.containsKey(person.id())) {
-        map.put(person.id(), convertPersonToString(person));
-      }
-    }
-    return map;
+    // ПОЯСНЕНИЕ: переписал через stream, убрал лишнее объявление переменной
+    return persons.stream()
+            .collect(Collectors.toMap(
+                    Person::id,
+                    Person::firstName
+            ));
   }
 
   // есть ли совпадающие в двух коллекциях персоны?
   public boolean hasSamePersons(Collection<Person> persons1, Collection<Person> persons2) {
-    boolean has = false;
-    for (Person person1 : persons1) {
-      for (Person person2 : persons2) {
-        if (person1.equals(person2)) {
-          has = true;
-        }
-      }
-    }
-    return has;
+    // ПОЯСНЕНИЕ:
+    // вместо прохода циклом по двум коллекция за O(n^2)
+    // сравниваю суммарный size двух коллекций с size Set из этих двух коллекций
+    // по итогу сложность линейная
+    return (persons1.size() + persons2.size())
+            > Stream.concat(persons1.stream(), persons2.stream())
+            .collect(Collectors.toSet())
+            .size();
   }
 
   // Посчитать число четных чисел
   public long countEven(Stream<Integer> numbers) {
-    count = 0;
-    numbers.filter(num -> num % 2 == 0).forEach(num -> count++);
-    return count;
+    // ПОЯСНЕНИЕ: избавился от прохода по массиву,
+    // использовав функцию count, которая считает оставшиеся в стриме элементы
+    return numbers.filter(num -> num % 2 == 0).count();
   }
 
   // Загадка - объясните почему assert тут всегда верен
@@ -94,5 +90,8 @@ public class Task9 {
     Collections.shuffle(integers);
     Set<Integer> set = new HashSet<>(integers);
     assert snapshot.toString().equals(set.toString());
+    // ПОЯСНЕНИЕ:
+    // хэширование перемешивает порядок значений, а не ключей,
+    // а так как Set - обертка над Map, которая сохраняемые значения использует как ключи - порядок не меняется
   }
 }
