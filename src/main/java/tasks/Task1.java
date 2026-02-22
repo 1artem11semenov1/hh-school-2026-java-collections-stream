@@ -32,19 +32,15 @@ public class Task1 {
                     )
             );
 
-    List<Person> sortedPersonList = new ArrayList<>();
-    for (Integer personId : personIds) {
-      sortedPersonList.add(personMap.get(personId));
-    }
-
-    return sortedPersonList;
+    return personIds.stream()
+            .map(personMap::get)
+            .collect(Collectors.toList());
   }
   // оценка сложности:
   // преобразование set -> map:
-  //    в условии указано, что set несортированыый => либо HashSet, либо LinkedHashSet.
   //    просто пробегаем по бакетам и заносим в мапу пары <id, Person>
   //    => O(|persons|) => O(n)
-  // заполнение sortedPersonList:
+  // заполнение результата (в return):
   //    пробегаем по personIds и для каждого id вынимаем за O(1) из Map значение с нужным ключем
   //    => O(|personIds|) => O(n)
   // -----------------------------------

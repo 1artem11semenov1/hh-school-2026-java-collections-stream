@@ -5,6 +5,7 @@ import common.Person;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /*
 Имеются
@@ -19,14 +20,7 @@ public class Task6 {
                                                   Map<Integer, Set<Integer>> personAreaIds,
                                                   Collection<Area> areas) {
 
-    Map<Integer, String> personMap = persons.stream()
-            .collect(
-                    Collectors.toMap(
-                            Person::id,
-                            Person::firstName
-                    )
-            );
-    Map<Integer, String> areasMap = areas.stream()
+    Map<Integer, String> areasNames = areas.stream()
             .collect(
                     Collectors.toMap(
                             Area::getId,
@@ -35,14 +29,13 @@ public class Task6 {
             );
 
     Set<String> nameAreaSet = new HashSet<>();
-    String name, area;
-    for (Map.Entry<Integer, Set<Integer>> entry : personAreaIds.entrySet()){
-      name = personMap.get(entry.getKey());
-      for (Integer areaId : entry.getValue()){
-        area = areasMap.get(areaId);
-        nameAreaSet.add(String.join(" - ", name, area));
-      }
+    for (Person person : persons){
+        Set<Integer> areaIds = personAreaIds.get(person.id());
+        areaIds.forEach(
+                id -> nameAreaSet.add(String.join(" - ", person.firstName(), areasNames.get(id)))
+        );
     }
+
     return nameAreaSet;
   }
 }

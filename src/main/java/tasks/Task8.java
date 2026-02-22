@@ -28,26 +28,16 @@ public class Task8 {
                     .map(Person::id)
                     .collect(Collectors.toSet())
     );
-    Map<Integer, Person> personMap = persons.stream()
-            .collect(Collectors.toMap(
-                    Person::id,
-                    Function.identity()
+
+    Map<Integer, List<Resume>> personsResumesMap = resumes.stream()
+            .collect(Collectors.groupingBy(Resume::personId));
+
+    return persons.stream()
+            .map(person -> new PersonWithResumes(
+                    person,
+                    (personsResumesMap.get(person.id())==null) ? new HashSet<>() : new HashSet<>(personsResumesMap.get(person.id()))
                     )
-            );
-
-    Map<Person, Set<Resume>> personsResumesMap = new HashMap<>();
-    persons.forEach(person -> personsResumesMap.put(person, new HashSet<>()));
-
-    Person curPerson;
-    for (Resume resume : resumes){
-      curPerson = personMap.get(resume.personId());
-      personsResumesMap.get(curPerson).add(resume);
-    }
-
-    Set<PersonWithResumes> personsResumes = new HashSet<>();
-    personsResumesMap
-            .forEach((key, value) -> personsResumes.add(new PersonWithResumes(key, value)));
-
-    return personsResumes;
+            )
+            .collect(Collectors.toSet());
   }
 }

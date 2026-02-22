@@ -1,13 +1,8 @@
 package tasks;
 
 import common.Person;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -37,9 +32,7 @@ public class Task9 {
   // Зачем-то нужны различные имена этих же персон (без учета фальшивой разумеется)
   public Set<String> getDifferentNames(List<Person> persons) {
     //ПОЯСНЕНИЕ: distinct не нужно, тк Set уже гарантирует уникальность своих элементов
-    // кроме того, не сделана проверка, о которой написал автор: "без учета фальшивой разумеется",
-    // по этому,нужно добавить skip
-    return getNames(persons).stream().skip(1).collect(Collectors.toSet());
+    return new HashSet<>(getNames(persons));
   }
 
   // Тут фронтовая логика, делаем за них работу - склеиваем ФИО
@@ -49,7 +42,7 @@ public class Task9 {
     // + в предыдущем соединении была ошибка:
     // вместо middleName второй раз использовалось secondName
     return Stream.of(person.firstName(), person.secondName(), person.middleName())
-            .filter(name -> !name.isEmpty())
+            .filter(Objects::nonNull)
             .collect(Collectors.joining(" "));
   }
 
@@ -59,20 +52,22 @@ public class Task9 {
     return persons.stream()
             .collect(Collectors.toMap(
                     Person::id,
-                    Person::firstName
+                    this::convertPersonToString
             ));
   }
 
   // есть ли совпадающие в двух коллекциях персоны?
   public boolean hasSamePersons(Collection<Person> persons1, Collection<Person> persons2) {
     // ПОЯСНЕНИЕ:
-    // вместо прохода циклом по двум коллекция за O(n^2)
-    // сравниваю суммарный size двух коллекций с size Set из этих двух коллекций
-    // по итогу сложность линейная
-    return (persons1.size() + persons2.size())
-            > Stream.concat(persons1.stream(), persons2.stream())
-            .collect(Collectors.toSet())
-            .size();
+    // переделал, теперь больше похоже на то, что было, однако сложность также линейная
+    Set<Person> uniquePersons = Stream.concat(persons1.stream(), persons2.stream())
+            .collect(Collectors.toSet());
+    boolean has = false;
+    for(Person person : uniquePersons){
+      has = persons1.contains(person) && persons2.contains(person);
+      if (has) break;
+    }
+    return has;
   }
 
   // Посчитать число четных чисел
@@ -91,7 +86,12 @@ public class Task9 {
     Set<Integer> set = new HashSet<>(integers);
     assert snapshot.toString().equals(set.toString());
     // ПОЯСНЕНИЕ:
-    // хэширование перемешивает порядок значений, а не ключей,
-    // а так как Set - обертка над Map, которая сохраняемые значения использует как ключи - порядок не меняется
+    // реализация hashCode у интов:
+    // public static int hashCode(int value) {
+    //        return value;
+    //    }
+    // соответственно каждое число попадает в бакет, совпадающий со его значением,
+    // а потому, когда toString начинает последовательно проходить по бакетам
+    // получаем числа в порядке возрастания
   }
 }
