@@ -29,13 +29,13 @@ public class Task8 {
                     .collect(Collectors.toSet())
     );
 
-    Map<Integer, List<Resume>> personsResumesMap = resumes.stream()
-            .collect(Collectors.groupingBy(Resume::personId));
+    Map<Integer, Set<Resume>> personsResumesMap = resumes.stream()
+            .collect(Collectors.groupingBy(Resume::personId, Collectors.toSet()));
 
     return persons.stream()
             .map(person -> new PersonWithResumes(
                     person,
-                    (personsResumesMap.get(person.id())==null) ? new HashSet<>() : new HashSet<>(personsResumesMap.get(person.id()))
+                    personsResumesMap.getOrDefault(person.id(), new HashSet<>())
                     )
             )
             .collect(Collectors.toSet());
